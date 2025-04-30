@@ -1,29 +1,38 @@
+// Funzione debounce per ritardare l'esecuzione di una funzione
+function debounce(func, delay) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
 // Inizializzazione Mappa Interattiva con Google Maps API e servizi Geocoder
 function initMap() {
     const mapDiv = document.getElementById('map-interactive');
     if (!mapDiv) return;
 
     const map = new google.maps.Map(mapDiv, {
-        center: {lat: 41.8719, lng: 12.5674},
+        center: { lat: 41.8719, lng: 12.5674 },
         zoom: 6
     });
 
     const geocoder = new google.maps.Geocoder();
 
     const waterSourcesLocations = [
-        {name: 'Galvanina', location: {lat: 44.05, lng: 12.45}, element: document.querySelector('#sources-table-body tr:nth-child(1) td:nth-child(3)')},
-        {name: 'San Pellegrino', location: {lat: 45.82, lng: 9.68}, element: document.querySelector('#sources-table-body tr:nth-child(2) td:nth-child(3)')},
-        {name: 'San Benedetto', location: {lat: 45.53, lng: 7.98}, element: document.querySelector('#sources-table-body tr:nth-child(3) td:nth-child(3)')},
-        {name: 'Sant’Anna', location: {lat: 44.25, lng: 7.23}, element: document.querySelector('#sources-table-body tr:nth-child(4) td:nth-child(3)')},
-        {name: 'Ferrarelle', location: {lat: 41.23, lng: 14.19}, element: document.querySelector('#sources-table-body tr:nth-child(5) td:nth-child(3)')},
-        {name: 'Sangemini', location: {lat: 42.57, lng: 12.64}, element: document.querySelector('#sources-table-body tr:nth-child(6) td:nth-child(3)')},
-        {name: 'Panna', location: {lat: 44.01, lng: 11.24}, element: document.querySelector('#sources-table-body tr:nth-child(7) td:nth-child(3)')},
-        {name: 'Levissima', location: {lat: 46.45, lng: 10.55}, element: document.querySelector('#sources-table-body tr:nth-child(8) td:nth-child(3)')},
-        {name: 'Monte Cimone', location: {lat: 44.20, lng: 10.70}, element: document.querySelector('#sources-table-body tr:nth-child(9) td:nth-child(3)')},
-        {name: 'Lete', location: {lat: 41.45, lng: 14.35}, element: document.querySelector('#sources-table-body tr:nth-child(10) td:nth-child(3)')},
-        {name: 'Lauretana', location: {lat: 45.53, lng: 7.98}, element: document.querySelector('#sources-table-body tr:nth-child(11) td:nth-child(3)')},
-        {name: 'Plose', location: {lat: 46.64, lng: 11.73}, element: document.querySelector('#sources-table-body tr:nth-child(12) td:nth-child(3)')},
-        {name: 'Pejo', location: {lat: 46.31, lng: 10.74}, element: document.querySelector('#sources-table-body tr:nth-child(13) td:nth-child(3)')}
+        { name: 'Galvanina', location: { lat: 44.05, lng: 12.45 }, element: document.querySelector('#sources-table-body tr:nth-child(1) td:nth-child(3)') },
+        { name: 'San Pellegrino', location: { lat: 45.82, lng: 9.68 }, element: document.querySelector('#sources-table-body tr:nth-child(2) td:nth-child(3)') },
+        { name: 'San Benedetto', location: { lat: 45.53, lng: 7.98 }, element: document.querySelector('#sources-table-body tr:nth-child(3) td:nth-child(3)') },
+        { name: 'Sant’Anna', location: { lat: 44.25, lng: 7.23 }, element: document.querySelector('#sources-table-body tr:nth-child(4) td:nth-child(3)') },
+        { name: 'Ferrarelle', location: { lat: 41.23, lng: 14.19 }, element: document.querySelector('#sources-table-body tr:nth-child(5) td:nth-child(3)') },
+        { name: 'Sangemini', location: { lat: 42.57, lng: 12.64 }, element: document.querySelector('#sources-table-body tr:nth-child(6) td:nth-child(3)') },
+        { name: 'Panna', location: { lat: 44.01, lng: 11.24 }, element: document.querySelector('#sources-table-body tr:nth-child(7) td:nth-child(3)') },
+        { name: 'Levissima', location: { lat: 46.45, lng: 10.55 }, element: document.querySelector('#sources-table-body tr:nth-child(8) td:nth-child(3)') },
+        { name: 'Monte Cimone', location: { lat: 44.20, lng: 10.70 }, element: document.querySelector('#sources-table-body tr:nth-child(9) td:nth-child(3)') },
+        { name: 'Lete', location: { lat: 41.45, lng: 14.35 }, element: document.querySelector('#sources-table-body tr:nth-child(10) td:nth-child(3)') },
+        { name: 'Lauretana', location: { lat: 45.53, lng: 7.98 }, element: document.querySelector('#sources-table-body tr:nth-child(11) td:nth-child(3)') },
+        { name: 'Plose', location: { lat: 46.64, lng: 11.73 }, element: document.querySelector('#sources-table-body tr:nth-child(12) td:nth-child(3)') },
+        { name: 'Pejo', location: { lat: 46.31, lng: 10.74 }, element: document.querySelector('#sources-table-body tr:nth-child(13) td:nth-child(3)') }
     ];
 
     waterSourcesLocations.forEach(source => {
@@ -34,24 +43,25 @@ function initMap() {
         });
     });
 
-    document.getElementById('search-city').addEventListener('input', function() {
-        const cityName = this.value;
-        if(cityName.length > 2) {
+    // Aggiungi debounce all'evento input
+    document.getElementById('search-city').addEventListener('input', debounce(function () {
+        const cityName = this.value.trim();
+        if (cityName.length > 2) {
             geocodeCity(cityName, geocoder, map, waterSourcesLocations);
         } else {
             resetDistances(waterSourcesLocations);
         }
-    });
+    }, 500)); // Ritarda l'esecuzione di 500ms
 }
 
 function geocodeCity(cityName, geocoder, map, waterSourcesLocations) {
-    geocoder.geocode({ 'address': cityName}, function(results, status) {
+    geocoder.geocode({ 'address': cityName }, function (results, status) {
         if (status === 'OK' && results && results[0]) {
             const cityLocation = results[0].geometry.location;
             map.setCenter(cityLocation);
             calculateGeodesicDistances(cityLocation, waterSourcesLocations); // Calcola distanze geodetiche
         } else {
-            alert('Geocoding non riuscito per: ' + cityName + ', causa: ' + status);
+            console.warn('Geocoding non riuscito per: ' + cityName + ', causa: ' + status);
             resetDistances(waterSourcesLocations);
         }
     });
@@ -65,14 +75,13 @@ function calculateGeodesicDistances(cityLocation, waterSourcesLocations) {
         const sourceLat = source.location.lat;
         const sourceLng = source.location.lng;
         const distanceKm = getDistance(cityLat, cityLng, sourceLat, sourceLng); // Calcola distanza geodetica
-        return {...source, distance: distanceKm.toFixed(1) + ' km', distanceMeters: distanceKm * 1000}; // Memorizza distanza in km e metri
+        return { ...source, distance: distanceKm.toFixed(1) + ' km', distanceMeters: distanceKm * 1000 }; // Memorizza distanza in km e metri
     });
 
     sourcesWithDistances.sort((a, b) => a.distanceMeters - b.distanceMeters); // Ordina per distanza geodetica
 
     updateDistancesInTable(sourcesWithDistances); // Aggiorna tabella con distanze geodetiche
 }
-
 
 function updateDistancesInTable(sourcesWithDistances) {
     const sourcesTableBody = document.getElementById('sources-table-body');
@@ -83,17 +92,14 @@ function updateDistancesInTable(sourcesWithDistances) {
         let cellName = row.insertCell(0);
         let cellLocation = row.insertCell(1);
         let cellDistance = row.insertCell(2);
-        let cellDetails = row.insertCell(3);
 
         cellName.textContent = source.name;
         cellLocation.textContent = getSourceLocationText(source.name);
         cellDistance.textContent = source.distance;
         cellDistance.dataset.lat = source.location.lat; // Mantieni lat e lng
         cellDistance.dataset.lng = source.location.lng;
-       
     });
 }
-
 
 function resetDistances(waterSourcesLocations) {
     waterSourcesLocations.forEach(source => {
@@ -102,7 +108,7 @@ function resetDistances(waterSourcesLocations) {
 }
 
 function getSourceLocationText(sourceName) {
-    switch(sourceName) {
+    switch (sourceName) {
         case 'Galvanina': return 'Colline Riminesi, Emilia-Romagna';
         case 'San Pellegrino': return 'Terme di San Pellegrino in Val Brembana, Lombardia';
         case 'San Benedetto': return 'Alpi Biellesi, Piemonte';
@@ -133,8 +139,8 @@ function getDistance(lat1, lon1, lat2, lon2) {
     const dLon = lon2_rad - lon1_rad;
 
     const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(lat1_rad) * Math.cos(lat2_rad) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        Math.cos(lat1_rad) * Math.cos(lat2_rad) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c;
